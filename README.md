@@ -1,6 +1,16 @@
+# QMK Userspace — bridgkick
+
+Custom keymaps for:
+- **Planck rev6** (STM32F303, DFU) — `keyboards/planck/rev6/keymaps/bridgkick/`
+- **Preonic rev2** (ATmega32u4, Atmel DFU) — `keyboards/preonic/rev2/keymaps/bridgkick/`
+
+Keymaps live in the `/keyboards` directory, mirroring the QMK firmware structure.
+
+---
+
 # QMK Userspace
 
-This is a template repository which allows for an external set of QMK keymaps to be defined and compiled. This is useful for users who want to maintain their own keymaps without having to fork the [main QMK repository](https://github.com/qmk/qmk_firmware). You must still fork the main QMK repository if writing firmware for a *new* keyboard.
+This is a template repository which allows for an external set of QMK keymaps to be defined and compiled.This is useful for users who want to maintain their own keymaps without having to fork the [main QMK repository](https://github.com/qmk/qmk_firmware). You must still fork the main QMK repository if writing firmware for a *new* keyboard.
 
 ## Howto configure your build targets
 
