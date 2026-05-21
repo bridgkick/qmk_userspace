@@ -6,6 +6,19 @@ Custom keymaps for:
 
 Keymaps live in the `/keyboards` directory, mirroring the QMK firmware structure.
 
+### Local compile commands (run from QMK MSYS terminal)
+
+```
+qmk compile -kb planck/rev6 -km bridgkick
+qmk compile -kb preonic/rev2 -km bridgkick
+```
+
+Or build all targets at once:
+
+```
+qmk userspace-compile
+```
+
 ---
 
 # QMK Userspace
