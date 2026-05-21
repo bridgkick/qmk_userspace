@@ -1,0 +1,87 @@
+name: Compile Planck rev6
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'keyboards/planck/rev6/keymaps/bridgkick/**'
+      - '.github/workflows/planck.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'keyboards/planck/rev6/keymaps/bridgkick/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install QMK CLI
+      run: pip install qmk
+
+    - name: QMK setup
+      run: qmk setup -H . --yes
+
+    - name: Install keymap-drawer
+      run: pip install keymap-drawer
+
+    - name: Create layouts directory
+      run: mkdir -p layouts
+
+    - name: Compile Planck rev6
+      run: qmk compile -kb planck/rev6 -km bridgkick
+
+    - name: Rename firmware
+      run: |
+        find . -name "*.hex" -path "*/planck/*" -type f | head -1 | xargs -I {} mv {} planck_rev6_bridgkick.hex
+
+    - name: Generate Layout SVG
+      run: |
+        keymap_file="keyboards/planck/rev6/keymaps/bridgkick/keymap.c"
+        keymap-drawer parse -c "$keymap_file" > layouts/planck.yaml
+        keymap-drawer draw layouts/planck.yaml > layouts/planck.svg
+
+    - name: Commit layout update
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add layouts/planck.svg layouts/planck.yaml
+        if ! git diff --cached --quiet; then
+          git commit -m "auto: update Planck layout SVG [skip ci]"
+          git push
+        fi
+
+    - name: Create Release
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          planck_rev6_bridgkick.hex
+          layouts/planck.svg
+        tag_name: planck-${{ github.run_number }}
+        body: |
+          ## Planck rev6 Firmware Build
+          **Commit:** ${{ github.sha }}
+          
+          - `planck_rev6_bridgkick.hex` — STM32F303 firmware
+          - `planck.svg` — Layout diagram
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload artifacts (PR)
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v4
+      with:
+        name: planck-firmware
+        path: |
+          planck_rev6_bridgkick.hex
+          layouts/planck.svg
