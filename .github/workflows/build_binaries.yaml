@@ -50,10 +50,10 @@ jobs:
         run: |
           mkdir -p layouts
           qmk c2json --no-cpp keyboards/planck/rev6/keymaps/bridgkick/keymap.c -kb planck/rev6 -km bridgkick > layouts/planck.json
-          keymap parse -q layouts/planck.json > layouts/planck.yaml
+          keymap parse -l QWERTY LOWER RAISE ADJUST -q layouts/planck.json > layouts/planck.yaml
           keymap draw layouts/planck.yaml > layouts/planck.svg
           qmk c2json --no-cpp keyboards/preonic/rev2/keymaps/bridgkick/keymap.c -kb preonic/rev2 -km bridgkick > layouts/preonic.json
-          keymap parse -q layouts/preonic.json > layouts/preonic.yaml
+          keymap parse -l QWERTY LOWER RAISE ADJUST -q layouts/preonic.json > layouts/preonic.yaml
           keymap draw layouts/preonic.yaml > layouts/preonic.svg
 
       - name: Upload keymap assets
