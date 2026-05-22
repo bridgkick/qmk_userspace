@@ -85,17 +85,26 @@ jobs:
           name: Keymaps
           path: artifacts/keymaps
 
-      - name: Delete latest release
-        run: gh release delete latest --cleanup-tag || true
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Build release metadata
+        id: meta
+        run: |
+          BUILD_DATE=$(date -u +%Y-%m-%d)
+          SHORT_SHA=${GITHUB_SHA::7}
+          TAG_NAME="${BUILD_DATE}-${SHORT_SHA}"
+          RELEASE_NAME="QMK Firmware ${BUILD_DATE} (${SHORT_SHA})"
+
+          echo "build_date=${BUILD_DATE}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Generate release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ github.token }}
-          name: Latest QMK Firmware
-          tag_name: latest
+          name: ${{ steps.meta.outputs.release_name }}
+          tag_name: ${{ steps.meta.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
           fail_on_unmatched_files: false
           draft: false
           prerelease: false
@@ -108,3 +117,25 @@ jobs:
             artifacts/firmware/**/*.uf2
             artifacts/keymaps/**/*.svg
             artifacts/keymaps/**/*.yaml
+
+      - name: Prune old releases
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          CUTOFF=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          KEEP_COUNT=0
+
+          gh release list --limit 100 --json tagName,createdAt --jq '.[] | [.tagName, .createdAt] | @tsv' | while IFS=$'\t' read -r old_tag created_at; do
+            [ -z "$old_tag" ] && continue
+
+            if [ "$KEEP_COUNT" -lt 5 ]; then
+              KEEP_COUNT=$((KEEP_COUNT + 1))
+              continue
+            fi
+
+            if [[ "$created_at" > "$CUTOFF" ]]; then
+              continue
+            fi
+
+            gh release delete "$old_tag" --cleanup-tag --yes
+          done
