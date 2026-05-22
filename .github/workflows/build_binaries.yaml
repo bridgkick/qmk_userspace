@@ -38,16 +38,23 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install keymap-drawer
-        run: pip install keymap-drawer
+      - name: Install QMK and keymap-drawer
+        run: pip install qmk keymap-drawer
+
+      - name: Set up QMK userspace overlay
+        run: |
+          qmk setup --yes qmk/qmk_firmware -b master
+          qmk config user.overlay_dir=$(realpath .)
 
       - name: Generate keymap YAML/SVG files
         run: |
           mkdir -p layouts
-          keymap-drawer parse -c keyboards/planck/rev6/keymaps/bridgkick/keymap.c > layouts/planck.yaml
-          keymap-drawer draw layouts/planck.yaml > layouts/planck.svg
-          keymap-drawer parse -c keyboards/preonic/rev2/keymaps/bridgkick/keymap.c > layouts/preonic.yaml
-          keymap-drawer draw layouts/preonic.yaml > layouts/preonic.svg
+          qmk c2json --no-cpp keyboards/planck/rev6/keymaps/bridgkick/keymap.c -kb planck/rev6 -km bridgkick > layouts/planck.json
+          keymap parse -q layouts/planck.json > layouts/planck.yaml
+          keymap draw layouts/planck.yaml > layouts/planck.svg
+          qmk c2json --no-cpp keyboards/preonic/rev2/keymaps/bridgkick/keymap.c -kb preonic/rev2 -km bridgkick > layouts/preonic.json
+          keymap parse -q layouts/preonic.json > layouts/preonic.yaml
+          keymap draw layouts/preonic.yaml > layouts/preonic.svg
 
       - name: Upload keymap assets
         uses: actions/upload-artifact@v4
