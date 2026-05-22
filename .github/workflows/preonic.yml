@@ -28,7 +28,9 @@ jobs:
       run: pip install qmk
 
     - name: QMK setup
-      run: qmk setup -H . --yes
+      run: |
+        qmk setup --yes
+        qmk config user.overlay_dir=$(realpath .)
 
     - name: Install keymap-drawer
       run: pip install keymap-drawer
