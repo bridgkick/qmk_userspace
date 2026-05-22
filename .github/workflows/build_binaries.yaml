@@ -122,20 +122,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          CUTOFF=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
-          KEEP_COUNT=0
-
-          gh release list --limit 100 --json tagName,createdAt --jq '.[] | [.tagName, .createdAt] | @tsv' | while IFS=$'\t' read -r old_tag created_at; do
+          gh release list --limit 100 --json tagName --jq '.[5:][]?.tagName' | while read -r old_tag; do
             [ -z "$old_tag" ] && continue
-
-            if [ "$KEEP_COUNT" -lt 5 ]; then
-              KEEP_COUNT=$((KEEP_COUNT + 1))
-              continue
-            fi
-
-            if [[ "$created_at" > "$CUTOFF" ]]; then
-              continue
-            fi
-
             gh release delete "$old_tag" --cleanup-tag --yes
           done
