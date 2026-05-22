@@ -1,6 +1,19 @@
 name: Build QMK firmware
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    paths:
+      - 'keyboards/**'
+      - 'users/**'
+      - 'qmk.json'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'keyboards/**'
+      - 'users/**'
+      - 'qmk.json'
+      - '.github/workflows/**'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,8 +26,78 @@ jobs:
       qmk_repo: qmk/qmk_firmware
       qmk_ref: master
 
+  generate_keymaps:
+    name: 'Generate Keymap Assets'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout userspace
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install keymap-drawer
+        run: pip install keymap-drawer
+
+      - name: Generate keymap YAML/SVG files
+        run: |
+          mkdir -p layouts
+          keymap-drawer parse -c keyboards/planck/rev6/keymaps/bridgkick/keymap.c > layouts/planck.yaml
+          keymap-drawer draw layouts/planck.yaml > layouts/planck.svg
+          keymap-drawer parse -c keyboards/preonic/rev2/keymaps/bridgkick/keymap.c > layouts/preonic.yaml
+          keymap-drawer draw layouts/preonic.yaml > layouts/preonic.svg
+
+      - name: Upload keymap assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: Keymaps
+          path: |
+            layouts/*.svg
+            layouts/*.yaml
+          if-no-files-found: error
+
   publish:
     name: 'QMK Userspace Publish'
-    uses: qmk/.github/.github/workflows/qmk_userspace_publish.yml@main
-    if: always() && !cancelled()
-    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled() && github.actor != 'github-actions[bot]'
+    needs:
+      - build
+      - generate_keymaps
+    steps:
+      - name: Download firmware artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Firmware
+          path: artifacts/firmware
+
+      - name: Download keymap artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Keymaps
+          path: artifacts/keymaps
+
+      - name: Delete latest release
+        run: gh release delete latest --cleanup-tag || true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Generate release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ github.token }}
+          name: Latest QMK Firmware
+          tag_name: latest
+          fail_on_unmatched_files: false
+          draft: false
+          prerelease: false
+          body: |
+            Automated QMK userspace build artifacts.
+            Commit: ${{ github.sha }}
+          files: |
+            artifacts/firmware/**/*.hex
+            artifacts/firmware/**/*.bin
+            artifacts/firmware/**/*.uf2
+            artifacts/keymaps/**/*.svg
+            artifacts/keymaps/**/*.yaml
