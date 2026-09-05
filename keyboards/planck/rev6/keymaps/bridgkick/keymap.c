@@ -24,11 +24,13 @@ enum planck_layers {
   _QWERTY,
   _LOWER,
   _RAISE,
-  _ADJUST
+  _ADJUST,
+  _NUMPAD
 };
 
 #define LOWER MO(_LOWER)
 #define RAISE MO(_RAISE)
+#define NUMPAD TG(_NUMPAD)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -40,7 +42,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * | Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |   /  |Enter |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | Brite| Ctrl | Alt  | GUI  |Lower |    Space    |Raise | Left | Down |  Up  |Right |
+ * | NUMPD| Ctrl | Alt  | GUI  |Lower |    Space    |Raise | Left | Down |  Up  |Right |
  * `-----------------------------------------------------------------------------------'
  */
 [_QWERTY] = LAYOUT_planck_grid(
@@ -48,6 +50,24 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_ESC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,
     KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_ENT ,
     KC_LCTL, KC_LCTL, KC_LALT, KC_LGUI, LOWER,   KC_SPC,  KC_SPC,  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
+),
+
+/* Numpad (Toggled by Bright key)
+ * ,-----------------------------------------------------------------------------------.
+ * |      |      |      |      |      |      |      |  7   |  8   |  9   |  -   |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |  4   |  5   |  6   |  /   |      |
+ * |------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |  1   |  2   |  3   |  :   |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * | NUMPD|      |      |      |      |             |      |  .   |  0   |  ,   | Enter|
+ * `-----------------------------------------------------------------------------------'
+ */
+[_NUMPAD] = LAYOUT_planck_grid(
+    _______, _______, _______, _______, _______, _______, _______, KC_7,    KC_8,    KC_9,    KC_MINS, _______,
+    _______, _______, _______, _______, _______, _______, _______, KC_4,    KC_5,    KC_6,    KC_SLSH, _______,
+    _______, _______, _______, _______, _______, _______, _______, KC_1,    KC_2,    KC_3,    KC_COLN, _______,
+    NUMPAD,  _______, _______, _______, _______, _______, _______, _______, KC_DOT,  KC_0,    KC_COMM, KC_ENT
 ),
 
 /* Lower
